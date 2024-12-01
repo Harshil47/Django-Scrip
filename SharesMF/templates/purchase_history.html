@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}
+<title>Purchase History</title>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Purchase History</h1>
+
+    {% if purchases %}
+        <table class="table table-striped mt-4">
+            <thead>
+                <tr>
+                    <th>Purchase ID</th>
+                    <th>Purchase Date</th>
+                    <th>Broker</th>
+                    <th>Type</th>
+                    <th>Mode</th>
+                    <th>User</th>
+                    <th>Scrip</th>
+                    <th>Quantity</th>
+                    <th>Purchase Rate</th>
+                    <th>Purchase Amount</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for purchase in purchases %}
+                <tr>
+                    <td>{{ purchase.purchase_id }}</td>
+                    <td>{{ purchase.purchase_date }}</td>
+                    <td>{{ purchase.broker }}</td>
+                    <td>{{ purchase.type }}</td>
+                    <td>{{ purchase.mode }}</td>
+                    <td>{{ purchase.user }}</td>
+                    <td>{{ purchase.script }}</td>
+                    <td>{{ purchase.qty }}</td>
+                    <td>{{ purchase.purchase_rate }}</td>
+                    <td>{{ purchase.purchase_amount }}</td>
+                    <td>
+                        <!-- Delete Form -->
+                        <form method="post" action="{% url 'delete_purchase' purchase.purchase_id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button 
+                                type="submit" 
+                                class="btn btn-danger btn-sm" 
+                                onclick="return confirmDelete();">Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No purchase history found.</p>
+    {% endif %}
+</div>
+
+<!-- Confirmation Script -->
+<script>
+    function confirmDelete() {
+        return confirm("Are you sure you want to delete this purchase? This action cannot be undone.");
+    }
+</script>
+{% endblock %}

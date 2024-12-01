@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Statement - Mehul</h1>
+
+  <!-- Filter Form -->
+  <form method="GET" class="form-inline">
+    <label for="user">User:</label>
+    <select id="user" name="user" class="form-control">
+      <option value="">--All Users--</option>
+      {% for user in users %}
+        <option value="{{ user.name }}" {% if user.name == request.GET.user %}selected{% endif %}>{{ user.name }}</option>
+      {% endfor %}
+    </select>
+
+    <label for="broker">Broker:</label>
+    <select id="broker" name="broker" class="form-control">
+      <option value="">--All Brokers--</option>
+      {% for broker in brokers %}
+        <option value="{{ broker.name }}" {% if broker.name == broker_filter %}selected{% endif %}>{{ broker.name }}</option>
+      {% endfor %}
+    </select>
+
+    <label for="type">Type:</label>
+    <select id="type" name="type" class="form-control">
+      <option value="">--All Types--</option>
+      <option value="Share" {% if type_filter == 'Share' %}selected{% endif %}>Share</option>
+      <option value="MF" {% if type_filter == 'MF' %}selected{% endif %}>Mutual Fund</option>
+    </select>
+
+
+    <label for="start_date">Start Date:</label>
+    <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}">
+
+    <label for="end_date">End Date:</label>
+    <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}">
+
+    <button type="submit" class="btn btn-primary">Filter</button>
+  </form>
+
+  <!-- Short Term Profit/Loss Table -->
+  <h2>Short Term Profit/Loss</h2>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Scrip</th>
+        <th>Qty</th>
+        <th>Purchase Date</th>
+        <th>Purchase Rate</th>
+        <th>Purchase Amount</th>
+        <th>Sale Date</th>
+        <th>Sale Rate</th>
+        <th>Sale Amount</th>
+        
+        <th>Short Profit</th>
+        <th>Short Loss</th>
+        <th>Tax @ 20%</th>
+        <th>NET</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sale in short_term_sales %}
+      <tr class="{% if sale.short_net > 0 %}profit-row{% elif sale.long_net < 1 %}loss-row{% endif %}">
+            <td>{{ sale.user.name }}</td>
+          <td>{{ sale.script }}</td>
+          <td>{{ sale.qty }}</td>
+          <td>{{ sale.purchase_id.purchase_date }}</td>
+          <td>{{ sale.purchase_rate }}</td>
+          <td>{{ sale.calculate_purchase_total }}</td>
+          <td>{{ sale.sale_date }}</td>
+          <td>{{ sale.sale_rate }}</td>
+          <td>{{ sale.sale_amount }}</td>
+          
+          <td>{{ sale.short_profit }}</td>
+          <td>{{ sale.short_loss }}</td>
+          <td>{{ sale.tax }}</td>
+          <td>{{ sale.short_net }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3">Total</td>
+        <td></td>
+        <td></td>
+        <td><strong>{{ short_term_summary.total_purchase_amount }}</strong></td>
+        <td></td><td></td>
+        <td><strong>{{ short_term_summary.total_sale_amount }}</strong></td>
+        <td><strong>{{ short_term_summary.total_short_profit }}</strong></td>
+        <td><strong>-{{ short_term_summary.total_short_loss }}</strong></td>
+        <td><strong>{{ short_term_tax }}</strong></td>
+        <td><strong>{{ short_term_summary.total_short_net }}</strong></td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- Long Term Profit/Loss Table -->
+  <h2>Long Term Profit/Loss</h2>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Scrip</th>
+        <th>Qty</th>
+        <th>Purchase Date</th>
+        <th>Purchase Rate</th>
+        <th>Purchase Amount</th>
+        <th>Sale Date</th>
+        <th>Sale Rate</th>
+        <th>Sale Amount</th>
+        
+        <th>GF Rate</th>
+        <th>GF Amount</th>
+        <th>Long Profit</th>
+        <th>Long Loss</th>
+        <th>Tax @ 12.5%</th>
+        <th>NET</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sale in long_term_sales %}
+      
+      <tr class="{% if sale.long_net > 0 %}profit-row{% elif sale.long_net <= 0 %}loss-row{% endif %}">
+
+            <td>{{ sale.user.name }}</td>
+            <td>{{ sale.script }}</td>
+            <td>{{ sale.qty }}</td>
+            <td>{{ sale.purchase_id.purchase_date }}</td>
+            <td>{{ sale.purchase_rate }}</td>
+            <td>{{ sale.calculate_purchase_total }}</td>
+            <td>{{ sale.sale_date }}</td>
+            <td>{{ sale.sale_rate }}</td>
+            <td>{{ sale.sale_amount }}</td>
+            <td>{{ sale.gf_rate }}</td>
+            <td>{{ sale.gf_amount }}</td>
+            <td>{{ sale.long_profit }}</td>
+            <td>{{ sale.long_loss }}</td>
+            <td>{{ sale.tax }}</td>
+            <td>{{ sale.long_net }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3">Total</td>
+        <td></td><td></td>
+        <td><strong>{{ long_term_summary.total_purchase_amount }}</strong></td>
+        <td></td><td></td>
+        <td><strong>{{ long_term_summary.total_sale_amount }}</strong></td>
+        <td></td><td></td>
+        <td><strong>{{ long_term_summary.total_long_profit }}</strong></td>
+        <td><strong>{{ long_term_summary.total_long_loss }}</strong></td>
+        <td><strong>{{ long_term_tax }}</strong></td>
+        <td><strong>{{ long_term_summary.total_long_net }}</strong></td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- Speculation Profit/Loss Table -->
+  <h2>Speculation Profit/Loss</h2>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Scrip</th>
+        <th>Qty</th>
+        <th>Purchase Date</th>
+        <th>Purchase Amount</th>
+        <th>Sale Date</th>
+        <th>Spec Profit</th>
+        <th>Spec Loss</th>
+        <th>Tax @30%</th>
+        <th>NET</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sale in speculation_sales %}
+        <tr>
+            <td>{{ sale.user.name }}</td>
+          <td>{{ sale.script }}</td>
+          <td>{{ sale.qty }}</td>
+          <td>{{ sale.purchase_id.purchase_date }}</td>
+          <td>{{ sale.calculate_purchase_total }}</td>
+          <td>{{ sale.sale_date }}</td>
+          <td>{{ sale.spec_profit }}</td>
+          <td>{{ sale.spec_loss }}</td>
+          <td>{{ sale.tax }}</td>
+          <td>{{ sale.spec_net }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3">Total</td>
+        
+        <td>{{ speculation_summary.total_purchase_amount }}</td>
+        <td>{{ speculation_summary.total_sale_amount }}</td>
+        <td>{{ speculation_summary.total_spec_profit }}</td>
+        <td>{{ speculation_summary.total_spec_loss }}</td>
+        <td>{{ speculation_tax }}</td>
+        <td><strong>{{ speculation_summary.total_spec_net }}</strong></td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+
+{% endblock %}

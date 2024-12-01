@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block body_class %}user-pl-page{% endblock %}
+{% block content %}
+<div class="container my-5">
+    <h1 class="text-center mb-4">User P&L</h1>
+
+    <!-- Date range filter form -->
+    <form method="GET" class="form-inline mb-4">
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}">
+
+        <label for="end_date">End Date:</label>
+        <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}">
+
+        <button type="submit" class="btn btn-primary ml-2">Filter</button>
+    </form>
+
+    {% if aggregated_sales %}
+    <table class="table table-striped table-bordered text-center">
+        <thead class="thead-dark">
+            <tr>
+                <th>User</th>
+                <th>Spec Profit</th>
+                <th>Spec Loss</th>
+                <th>Spec Net</th>
+                <th>Short Profit</th>
+                <th>Short Loss</th>
+                <th>Short Net</th>
+                <th>Long Profit</th>
+                <th>Long Loss</th>
+                <th>Tax</th>
+                <th>Net</th>
+                <th>Deduction Left</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sale in aggregated_sales %}
+            <tr>
+                <td>{{ sale.user }}</td>
+                <td>{{ sale.total_spec_profit|default:"0.00" }}</td>
+                <td>{{ sale.total_spec_loss|default:"0.00" }}</td>
+                <td>{{ sale.spec_net|default:"0.00" }}</td>
+                <td>{{ sale.total_short_profit|default:"0.00" }}</td>
+                <td>{{ sale.total_short_loss|default:"0.00" }}</td>
+                <td>{{ sale.short_net|default:"0.00" }}</td>
+                <td>{{ sale.total_long_profit|default:"0.00" }}</td>
+                <td>{{ sale.total_long_loss|default:"0.00" }}</td>
+                
+                <td>{{ sale.total_tax|default:"0.00" }}</td>
+                <td>{{ sale.net|default:"0.00" }}</td>
+                <td>{{ sale.deduction_left|default:"0.00" }}</td>
+            </tr>
+            {% endfor %}
+            <!-- Total Row -->
+            <tr>
+                <td><strong>Total</strong></td>
+                <td><strong>{{ total_spec_profit }}</strong></td>
+                <td><strong>{{ total_spec_loss }}</strong></td>
+                <td><strong>{{ total_spec_net }}</strong></td>
+                <td><strong>{{ total_short_profit }}</strong></td>
+                <td><strong>{{ total_short_loss }}</strong></td>
+                <td><strong>{{ total_short_net }}</strong></td>
+                <td><strong>{{ total_long_profit }}</strong></td>
+                <td><strong>{{ total_long_loss }}</strong></td>
+
+                <td><strong>{{ total_tax }}</strong></td>
+                <td><strong>{{ total_net }}</strong></td>
+                <td><strong>{{ total_deduction_left }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-warning text-center">
+        No records found for the selected date range.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
