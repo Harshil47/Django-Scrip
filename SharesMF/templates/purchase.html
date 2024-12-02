@@ -14,13 +14,13 @@
                 <label for="purchase_date" class="form-label">Date:</label>
                 <input type="date" id="purchase_date" class="form-control form-control-sm" v-model="form.purchase_date" required>
             </div>
-            
+
             <div class="col-md-4 mb-2">
                 <label for="script" class="form-label">Scrip:</label>
                 <input type="text" id="script" class="form-control form-control-sm" v-model="form.script" required>
             </div>
-            
-            
+
+
             <div class="col-md-4 mb-2">
                 <label for="type" class="form-label">Type:</label>
                 <select id="type" class="form-control form-control-sm" v-model="form.type" required>
@@ -31,14 +31,14 @@
         </div>
         <div class="row">
             <div class="col-md-4 mb-2">
-                <label for="user_name" class="form-label">User Name:</label>
+                <label for="user_name" class="form-label">Holder Name:</label>
                 <input type="text" id="user_name" class="form-control form-control-sm" v-model="form.user_name" required>
             </div>
             <div class="col-md-4 mb-2">
                 <label for="qty" class="form-label">Quantity:</label>
                 <input type="number" id="qty" class="form-control form-control-sm" v-model="form.qty" required>
             </div>
-            
+
             <div class="col-md-4 mb-2">
                 <label for="purchase_rate" class="form-label">Purchase Rate:</label>
                 <input type="number" step="0.01" id="purchase_rate" class="form-control form-control-sm" v-model="form.purchase_rate" required>
@@ -54,7 +54,7 @@
                     <option value="SVV">SVV</option>
                 </select>
             </div>
-        
+
         <div class="col-md-4 mb-2">
             <label for="mode" class="form-label">Mode:</label>
             <select id="mode" class="form-control form-control-sm" v-model="form.mode" required>
@@ -70,10 +70,10 @@
             </select>
         </div>
         <div class="col-md-4 mb-2">
-            <label for="entry" class="form-label">Entry:</label>
+            <label for="entry" class="form-label">Data Entry:</label>
             <input type="text" id="entry" class="form-control form-control-sm" v-model="form.entry" required>
         </div>
-    
+
     </div>
         <button type="submit" class="btn btn-primary btn-sm w-100 mt-3">Add Purchase</button>
     </form>
@@ -102,14 +102,14 @@
                 mehul: false, // Default to "No"
                 entry: ''
             },
-            
+
             successMessage: false,
-            
-            csrfToken: document.querySelector('meta[name="csrf-token"]') 
-               ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') 
+
+            csrfToken: document.querySelector('meta[name="csrf-token"]')
+               ? document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                : '', // Fallback if CSRF token is missing
         },
-        
+
         methods: {
 
             addPurchase() {
@@ -139,7 +139,7 @@
                         purchase_rate: '',
                         broker: '',
                         entry: '',
-                       
+
                     };
                     // Show success message
                     this.successMessage = true;
