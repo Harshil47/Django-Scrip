@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 {% load indian_currency %} 
 {% block content %}
-  <h1>Statement</h1>
+<h1>Statement{% if request.GET.user %} of {{ request.GET.user }}{% endif %}</h1>
+
 
   <!-- Filter Form -->
   <form method="GET" class="form-inline">
@@ -43,7 +44,6 @@
   <table class="table table-striped">
     <thead>
       <tr>
-        <th>Holder</th>
         <th>Scrip</th>
         <th>Qty</th>
         <th>Purchase Date</th>
@@ -56,13 +56,13 @@
         <th>Short Profit</th>
         <th>Short Loss</th>
         <th>Tax @ 20%</th>
-        <th>NET</th>
+       
       </tr>
     </thead>
     <tbody>
       {% for sale in short_term_sales %}
-      <tr class="{% if sale.short_net > 0 %}profit-row{% elif sale.long_net < 1 %}loss-row{% endif %}">
-            <td>{{ sale.user.name }}</td>
+      <tr>
+          
           <td>{{ sale.script }}</td>
           <td>{{ sale.qty }}</td>
           <td>{{ sale.purchase_id.purchase_date }}</td>
@@ -75,7 +75,6 @@
           <td>{{ sale.short_profit|indian_currency }}</td>
           <td>{{ sale.short_loss |indian_currency}}</td>
           <td>{{ sale.tax|indian_currency }}</td>
-          <td>{{ sale.short_net|indian_currency }}</td>
         </tr>
       {% endfor %}
     </tbody>
@@ -83,15 +82,13 @@
       <tr>
         <td colspan="3">Total</td>
         <td></td>
-        <td></td>
+        
         <td><strong>{{ short_term_summary.total_purchase_amount|indian_currency }}</strong></td>
         <td></td><td></td>
         <td><strong>{{ short_term_summary.total_sale_amount|indian_currency }}</strong></td>
         <td><strong>{{ short_term_summary.total_short_profit|indian_currency }}</strong></td>
         <td><strong>-{{ short_term_summary.total_short_loss|indian_currency }}</strong></td>
         <td><strong>{{ short_term_tax|indian_currency }}</strong></td>
-        <td><strong>{{ short_term_summary.total_short_net|indian_currency}}</strong></td>
-        <td></td>
       </tr>
     </tfoot>
   </table>
@@ -101,7 +98,6 @@
   <table class="table table-striped">
     <thead>
       <tr>
-        <th>Holder</th>
         <th>Scrip</th>
         <th>Qty</th>
         <th>Purchase Date</th>
@@ -116,15 +112,15 @@
         <th>Long Profit</th>
         <th>Long Loss</th>
         <th>Tax @ 12.5%</th>
-        <th>NET</th>
+      
       </tr>
     </thead>
     <tbody>
       {% for sale in long_term_sales %}
       
-      <tr class="{% if sale.long_net > 0 %}profit-row{% elif sale.long_net <= 0 %}loss-row{% endif %}">
+      <tr >
 
-            <td>{{ sale.user.name }}</td>
+            
             <td>{{ sale.script }}</td>
             <td>{{ sale.qty }}</td>
             <td>{{ sale.purchase_id.purchase_date }}</td>
@@ -138,14 +134,14 @@
             <td>{{ sale.long_profit |indian_currency}}</td>
             <td>{{ sale.long_loss |indian_currency}}</td>
             <td>{{ sale.tax |indian_currency}}</td>
-            <td>{{ sale.long_net |indian_currency}}</td>
+          
         </tr>
       {% endfor %}
     </tbody>
     <tfoot>
       <tr>
         <td colspan="3">Total</td>
-        <td></td><td></td>
+        <td></td>
         <td><strong>{{ long_term_summary.total_purchase_amount|indian_currency }}</strong></td>
         <td></td><td></td>
         <td><strong>{{ long_term_summary.total_sale_amount|indian_currency }}</strong></td>
@@ -153,18 +149,18 @@
         <td><strong>{{ long_term_summary.total_long_profit|indian_currency }}</strong></td>
         <td><strong>{{ long_term_summary.total_long_loss|indian_currency }}</strong></td>
         <td><strong>{{ long_term_tax|floatformat:2|indian_currency }}</strong></td>
-        <td><strong>{{ long_term_summary.total_long_net|floatformat:2 |indian_currency}}</strong></td>
+        
         <td></td>
       </tr>
     </tfoot>
   </table>
+
 
   <!-- Speculation Profit/Loss Table -->
   <h2>Speculation Profit/Loss</h2>
   <table class="table table-striped">
     <thead>
       <tr>
-        <th>Holder</th>
         <th>Scrip</th>
         <th>Qty</th>
         <th>Purchase Date</th>
@@ -176,13 +172,11 @@
         <th>Spec Profit</th>
         <th>Spec Loss</th>
         <th>Tax @30%</th>
-        <th>NET</th>
       </tr>
     </thead>
     <tbody>
       {% for sale in speculation_sales %}
         <tr>
-            <td>{{ sale.user.name }}</td>
           <td>{{ sale.script }}</td>
           <td>{{ sale.qty }}</td>
           <td>{{ sale.purchase_id.purchase_date }}</td>
@@ -194,21 +188,19 @@
           <td>{{ sale.spec_profit }}</td>
           <td>{{ sale.spec_loss }}</td>
           <td>{{ sale.tax }}</td>
-          <td>{{ sale.spec_net }}</td>
         </tr>
       {% endfor %}
     </tbody>
     <tfoot>
       <tr>
         <td colspan="3">Total</td>
-        <td></td><td></td>
+        <td></td>
         <td><strong>{{ speculation_summary.total_purchase_amount }}</strong></td>
         <td></td><td></td>
         <td><strong>{{ speculation_summary.total_sale_amount }}</strong></td>
         <td><strong>{{ speculation_summary.total_spec_profit }}</strong></td>
         <td><strong>{{ speculation_summary.total_spec_loss }}</strong></td>
         <td><strong>{{ speculation_tax }}</strong></td>
-        <td><strong>{{ speculation_summary.total_spec_net }}</strong></td>
         <td></td>
       </tr>
     </tfoot>

@@ -26,8 +26,8 @@ SECRET_KEY = 'django-insecure-jb#6c)g1(a_f%8&zbs5yi1huhcj&utxx^d^-%8mz!lac9$(=gh
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['TusharSanghavi.pythonanywhere.com']
-
+#ALLOWED_HOSTS = ['TusharSanghavi.pythonanywhere.com']
+ALLOWED_HOSTS = os.getenv('TusharSanghavi.pythonanywhere.com', '127.0.0.1,localhost').split(',')
 
 # Application definition
 

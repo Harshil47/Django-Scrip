@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from .models import UserTable, Purchase, Balance, Sale , TaxRate , Exemption , Broker
+from .models import UserTable, Purchase, Balance, Sale , TaxRate , Exemption , Broker , StockSplit
 
 admin.site.register(UserTable)
 admin.site.register(Purchase)
@@ -9,3 +9,4 @@ admin.site.register(Sale)
 admin.site.register(TaxRate)
 admin.site.register(Exemption)
 admin.site.register(Broker)
+admin.site.register(StockSplit)

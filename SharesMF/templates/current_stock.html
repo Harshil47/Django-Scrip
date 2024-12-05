@@ -46,7 +46,10 @@
                 <td>{{ record.total_qty }}</td>
                 <td>{{ record.total_amount|indian_currency }}</td>
                 <td>{{ record.entry_count }}</td>
-                <td><a href="{% url 'script_info' record.script %}" class="btn btn-info">View</a></td>
+                <td><a href="{% url 'script_info' record.script %}" class="btn btn-info">View</a>
+                    <a href="{% url 'split_submit' record.script %}" class="btn btn-primary">Stock Split</a>
+
+
             </tr>
             {% endfor %}
         </tbody>

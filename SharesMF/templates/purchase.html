@@ -5,153 +5,96 @@
 {% endblock %}
 
 {% block content %}
-<div id="app" class="container mt-5">
+<div class="container mt-5">
     <h1 class="text-center">Purchase Entry</h1>
     <!-- Form for new purchase -->
-    <form @submit.prevent="addPurchase" class="mt-4">
+    <form method="post" action="{% url 'purchase_entry' %}" class="mt-4">
+        {% csrf_token %}
         <div class="row">
             <div class="col-md-4 mb-2">
                 <label for="purchase_date" class="form-label">Date:</label>
-                <input type="date" id="purchase_date" class="form-control form-control-sm" v-model="form.purchase_date" required>
+                <input type="date" id="purchase_date" name="purchase_date" class="form-control form-control-sm" value="{{ initial_data.purchase_date }}" required>
             </div>
 
             <div class="col-md-4 mb-2">
                 <label for="script" class="form-label">Scrip:</label>
-                <input type="text" id="script" class="form-control form-control-sm" v-model="form.script" required>
+                <input type="text" id="script" name="script" class="form-control form-control-sm" value="{{ initial_data.script }}" required>
             </div>
-
 
             <div class="col-md-4 mb-2">
                 <label for="type" class="form-label">Type:</label>
-                <select id="type" class="form-control form-control-sm" v-model="form.type" required>
-                    <option value="Share">Share</option>
-                    <option value="MF">Mutual Fund</option>
+                <select id="type" name="type" class="form-control form-control-sm" required>
+                    <option value="Share" {% if initial_data.type == 'Share' %}selected{% endif %}>Share</option>
+                    <option value="MF" {% if initial_data.type == 'MF' %}selected{% endif %}>Mutual Fund</option>
                 </select>
             </div>
         </div>
         <div class="row">
             <div class="col-md-4 mb-2">
                 <label for="user_name" class="form-label">Holder Name:</label>
-                <input type="text" id="user_name" class="form-control form-control-sm" v-model="form.user_name" required>
+                <select id="user_name" name="user_name" class="form-control form-control-sm" required>
+                    {% for user in users %}
+                        <option value="{{ user.name }} "{% if user.name == initial_data.user_name %}selected{% endif %} >{{ user.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
             <div class="col-md-4 mb-2">
                 <label for="qty" class="form-label">Quantity:</label>
-                <input type="number" id="qty" class="form-control form-control-sm" v-model="form.qty" required>
+                <input type="number" id="qty" name="qty" class="form-control form-control-sm" value="{{ initial_data.qty }}" required>
             </div>
 
             <div class="col-md-4 mb-2">
                 <label for="purchase_rate" class="form-label">Purchase Rate:</label>
-                <input type="number" step="0.01" id="purchase_rate" class="form-control form-control-sm" v-model="form.purchase_rate" required>
+                <input type="number" step="0.01" id="purchase_rate" name="purchase_rate" class="form-control form-control-sm" value="{{ initial_data.purchase_rate }}" required>
             </div>
         </div>
         <div class="row">
+            <!-- Broker Field -->
             <div class="col-md-4 mb-2">
                 <label for="broker" class="form-label">Broker:</label>
-                <select id="broker" class="form-control form-control-sm" v-model="form.broker" required>
-                    <option value="" disabled>Select Broker</option>
-                    <option value="Samyag">Samyag</option>
-                    <option value="Manumangal">Manumangal</option>
-                    <option value="SVV">SVV</option>
+                <select id="broker" name="broker" class="form-control form-control-sm" required>
+                    {% for broker in brokers %}
+                        <option value="{{ broker.name }}" {% if broker.name == initial_data.broker %}selected{% endif %}>
+                            {{ broker.name }}
+                        </option>
+                    {% endfor %}
                 </select>
             </div>
 
-        <div class="col-md-4 mb-2">
-            <label for="mode" class="form-label">Mode:</label>
-            <select id="mode" class="form-control form-control-sm" v-model="form.mode" required>
-                <option value="new-issue">New Issue</option>
-                <option value="secondary-market">Secondary Market</option>
-            </select>
-        </div>
-        <div class="col-md-4 mb-2">
-            <label for="mehul" class="form-label">Mehul:</label>
-            <select id="mehul" class="form-control form-control-sm" v-model="form.mehul" required>
-                <option :value="false" selected>No</option>
-                <option :value="true">Yes</option>
-            </select>
-        </div>
-        <div class="col-md-4 mb-2">
-            <label for="entry" class="form-label">Data Entry:</label>
-            <input type="text" id="entry" class="form-control form-control-sm" v-model="form.entry" required>
-        </div>
-
-    </div>
+            <div class="col-md-4 mb-2">
+                <label for="mode" class="form-label">Mode:</label>
+                <select id="mode" name="mode" class="form-control form-control-sm" required>
+                    <option value="new-issue" {% if initial_data.mode == 'new-issue' %}selected{% endif %}>Primary Market</option>
+                    <option value="secondary-market" {% if initial_data.mode == 'secondary-market' %}selected{% endif %}>Secondary Market</option>
+                </select>
+            </div>
+            <div class="col-md-4 mb-2">
+                <label for="mehul" class="form-label">Mehul:</label>
+                <select id="mehul" name="mehul" class="form-control form-control-sm" required>
+                    <option value="false" selected>No</option>
+                    <option value="true">Yes</option>
+                </select>
+            </div>
+            <div class="col-md-4 mb-2">
+                <label for="entry" class="form-label">Data Entry:</label>
+                <select id="entry" name="entry" class="form-control form-control-sm" required>
+                    {% for user in data_entry_users %}
+                        <option value="{{ user.name }}">{{ user.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 mb-2">
+                <label for="referenced_by" class="form-label">Referenced By:</label>
+                <input type="text" id="referenced_by" name="referenced_by" class="form-control form-control-sm" value="{{ initial_data.referenced_by }}">
+            </div>
         <button type="submit" class="btn btn-primary btn-sm w-100 mt-3">Add Purchase</button>
     </form>
 
+    {% if success_message %}
     <!-- Confirmation Message -->
-    <div v-if="successMessage" class="alert alert-success mt-4" role="alert">
-        Purchase added successfully!
+    <div class="alert alert-success mt-4" role="alert">
+        {{ success_message }}
     </div>
+    {% endif %}
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script>
-    new Vue({
-        el: "#app",
-        data: {
-            form: {
-                purchase_date: '',
-                script: '',
-                type: 'Share',
-                mode: 'secondary-market',
-                user_name: '',
-                qty: '',
-                purchase_rate: '',
-                broker: '',
-                mehul: false, // Default to "No"
-                entry: ''
-            },
-
-            successMessage: false,
-
-            csrfToken: document.querySelector('meta[name="csrf-token"]')
-               ? document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-               : '', // Fallback if CSRF token is missing
-        },
-
-        methods: {
-
-            addPurchase() {
-                // Ensure form data is in correct types
-                this.form.qty = Number(this.form.qty);
-                this.form.purchase_rate = parseFloat(this.form.purchase_rate);
-
-                // Configure CSRF token for request
-                axios.defaults.headers.common['X-CSRFToken'] = this.csrfToken;
-
-                // Send data to backend
-                axios.post('/purchase-entry/', this.form, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': this.csrfToken
-                    }
-                })
-                .then(response => {
-                    // Clear the form after success
-                    this.form = {
-                        purchase_date: '',
-                        script: '',
-                        type: 'Share',
-                        mode: '',
-                        user_name: '',
-                        qty: '',
-                        purchase_rate: '',
-                        broker: '',
-                        entry: '',
-
-                    };
-                    // Show success message
-                    this.successMessage = true;
-                    setTimeout(() => {
-                        this.successMessage = false;
-                    }, 3000); // Hide after 3 seconds
-                })
-                .catch(error => {
-                    console.error("Error adding purchase:", error);
-                });
-            }
-        }
-    });
-</script>
 {% endblock %}

@@ -10,6 +10,7 @@ class UserTable(models.Model):
     name = models.CharField(max_length=100, primary_key=True)
     pan = models.CharField(max_length=20, unique=True)
     family = models.CharField(max_length=100, null=True, blank=True)
+    data_entry = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -49,6 +50,7 @@ class Purchase(models.Model):
     # New boolean field for 'mehul'
     mehul = models.BooleanField(default=False)  # Default to "No"
     entry = models.CharField(max_length=255, null=True, blank=True)
+    referenced_by = models.CharField(max_length=100, null=True, blank=True) 
 
 
     def save(self, *args, **kwargs):
@@ -56,7 +58,7 @@ class Purchase(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.purchase_id}: {self.script} ({self.user.name})"
+        return f"{self.purchase_id}"
 
 
 class Balance(models.Model):
@@ -205,3 +207,11 @@ class StockPrice(models.Model):
     price = models.FloatField(null=False, default=0.0)
     last_updated = models.DateTimeField(auto_now=True)
     timeslot = models.TimeField()
+    
+class StockSplit(models.Model):
+    script = models.CharField(max_length=100)
+    split_date = models.DateField()
+    ratio = models.FloatField()
+
+    def __str__(self):
+        return f"{self.script} - Split Ratio {self.ratio} on {self.split_date}"

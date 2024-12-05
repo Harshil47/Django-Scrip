@@ -2,58 +2,92 @@ from django.shortcuts import render , redirect , get_object_or_404
 from django.http import JsonResponse
 from django.views import View
 from django.forms.models import model_to_dict
-from .models import Purchase, UserTable , Balance , Sale , TaxRate , Exemption, Broker , StockPrice
+from .models import Purchase, UserTable , Balance , Sale , TaxRate , Exemption, Broker , StockPrice , StockSplit
+from .forms import StockSplitForm
 import json , requests
 from django.db.models import Sum , Q  , F, ExpressionWrapper, DecimalField, Value, Case, When , FloatField , Count
 from django.contrib import messages
 from datetime import datetime , timedelta 
 from decimal import Decimal
 from django.contrib import messages 
+from django.db import transaction, models
+import traceback
 
 
-
-class PurchaseEntryView(View):
+def purchase_view(request, purchase_id=None):
+    users = UserTable.objects.all()
+    data_entry_users = UserTable.objects.filter(data_entry=True)
+    brokers = Broker.objects.all()
+    if purchase_id:
+        # Fetch the purchase record to duplicate
+        purchase = get_object_or_404(Purchase, pk=purchase_id)
+        initial_data = {
+            'purchase_date': purchase.purchase_date,
+            'script': purchase.script,
+            'type': purchase.type,
+            'user_name': purchase.user.name,
+            'qty': purchase.qty,
+            'purchase_rate': purchase.purchase_rate,
+            'broker': purchase.broker.name if purchase.broker else '',
+            'mode': purchase.mode,
+            'mehul': purchase.mehul,
+            'entry': purchase.entry,
+            'referenced_by': purchase.referenced_by,
+        }
+    else:
+        initial_data = {}
     
-    def post(self, request):
-        # Create a new purchase entry
+    if request.method == 'POST':
         try:
-            data = json.loads(request.body)
-            print("POST request received")
-            
-            # Retrieve the user object using the name field
-            user = UserTable.objects.get(name=data['user_name'])  # Use 'name' as the primary key
-            broker = Broker.objects.get(name=data['broker']) if data.get('broker') else None
-            mehul_value = data.get('mehul', False)
-            entry_value = data.get('entry', '')
-            print("Received data:", data)
-            print("User retrieved:", user)
-            # Create and save the purchase entry
-            purchase = Purchase.objects.create(
-                purchase_date=data['purchase_date'],
-                script=data['script'],
-                type=data['type'],
-                user=user,  # Associate the user using the user object
-                qty=data['qty'],
-                purchase_rate=data['purchase_rate'],
-                broker=broker,
-                mode=data['mode'],
-                mehul=mehul_value,
-                entry=entry_value
-            )
-            purchase.save()
-            print("Purchase saved:", purchase)
-            return JsonResponse(model_to_dict(purchase), status=201)
-        except UserTable.DoesNotExist:
-            print("Error: User with the given name not found")
-            return JsonResponse({'error': 'User with the given name not found'}, status=400)
-        except Broker.DoesNotExist:
-            return JsonResponse({'error': 'Broker not found'}, status=400)
-        except Exception as e:
-            
-            return JsonResponse({'error': str(e)}, status=400)
+            # Extract data from POST request
+            purchase_date = request.POST['purchase_date']
+            script = request.POST['script']
+            purchase_type = request.POST['type']
+            user_name = request.POST['user_name']
+            qty = int(request.POST['qty'])
+            purchase_rate = float(request.POST['purchase_rate'])
+            broker_name = request.POST['broker']
+            mode = request.POST['mode']
+            mehul = request.POST['mehul'] == 'true'  # Convert string to boolean
+            entry = request.POST['entry']
+            referenced_by = request.POST['referenced_by']
 
-def purchase_view(request):
-    return render(request, 'purchase.html')
+            # Retrieve related objects
+            user = UserTable.objects.get(name=user_name)
+            broker = Broker.objects.get(name=broker_name) if broker_name else None
+
+            # Create the purchase entry
+            Purchase.objects.create(
+                purchase_date=purchase_date,
+                script=script,
+                type=purchase_type,
+                user=user,
+                qty=qty,
+                purchase_rate=purchase_rate,
+                broker=broker,
+                mode=mode,
+                mehul=mehul,
+                entry=entry,
+                referenced_by=referenced_by
+                
+            )
+            
+            return render(request, 'purchase.html', {'success_message': 'Purchase added successfully!'})
+        except UserTable.DoesNotExist:
+            return render(request, 'purchase.html', {'error_message': 'User not found.'})
+        except Broker.DoesNotExist:
+            return render(request, 'purchase.html', {'error_message': 'Broker not found.'})
+        except Exception as e:
+            return render(request, 'purchase.html', {'error_message': str(e)})
+    # Fetch data for dropdowns
+    
+    
+    return render(request, 'purchase.html', {
+        'initial_data': initial_data,
+        'users': users,
+        'data_entry_users': data_entry_users,
+        'brokers': brokers
+    })
 
 
 def current_stock_view(request):
@@ -252,6 +286,11 @@ def main_feature_statement(request):
     short_term_profit = short_term_summary['total_short_profit'] or 0
     short_term_loss = short_term_summary['total_short_loss'] or 0
     short_term_tax = max(0,(short_term_profit - short_term_loss) * (Decimal(tax_rates.get('Short', 0)) / Decimal(100)))
+    # Calculate total short-term net profit
+    total_short_net = short_term_profit - short_term_loss - short_term_tax
+
+    # Update the short-term summary
+    short_term_summary['total_short_net'] = total_short_net
 
     # Long Term Profit/Loss
     long_term_sales = sales_query.filter(sale_date__gte=F('purchase_id__purchase_date') + timedelta(days=365))
@@ -261,7 +300,6 @@ def main_feature_statement(request):
         total_sale_amount=Sum('sale_amount'),
         total_long_profit=Sum('long_profit'),
         total_long_loss=Sum('long_loss'),
-        total_long_net=Sum(F('long_profit') - F('long_loss') - F('tax')),
     )
     long_term_summary['total_purchase_amount'] = total_purchase_amount
     long_term_profit = long_term_summary['total_long_profit'] or 0
@@ -276,6 +314,11 @@ def main_feature_statement(request):
     # Update the long-term tax calculation logic
     taxable_long_term_profit = max(Decimal(0), long_term_profit - long_term_loss - exemption_amount)
     long_term_tax = max(0,taxable_long_term_profit * (Decimal(tax_rates.get('Long', 0)) / Decimal(100)))
+    # Calculate total long-term net profit
+    total_long_net = long_term_profit - long_term_loss - long_term_tax
+
+# Update long-term summary
+    long_term_summary['total_long_net'] = total_long_net
     #long_term_tax = (long_term_profit - long_term_loss) * (Decimal(tax_rates.get('Long', 0)) / Decimal(100))
     
 
@@ -289,12 +332,14 @@ def main_feature_statement(request):
         total_sale_amount=Sum('sale_amount'),
         total_spec_profit=Sum('spec_profit'),
         total_spec_loss=Sum('spec_loss'),
-        total_spec_net=Sum(F('spec_profit') - F('spec_loss') - F('tax')),
     )
     speculation_summary['total_purchase_amount'] = total_purchase_amount
     speculation_profit = speculation_summary['total_spec_profit'] or 0
     speculation_loss = speculation_summary['total_spec_loss'] or 0
     speculation_tax = max(0,(speculation_profit - speculation_loss) * (Decimal(tax_rates.get('Speculation', 0)) / Decimal(100)))
+    # Calculate total speculation net profit
+    total_spec_net = speculation_profit - speculation_loss - speculation_tax
+    speculation_summary['total_spec_net'] = total_spec_net
 
     context = {
         'users': users,
@@ -581,3 +626,222 @@ def mehul_statement(request):
     }
 
     return render(request, 'mehul_statement.html', context)
+
+def print_statement(request):
+    # Getting the current date for date range filters (can be adjusted for custom range)
+    today = datetime.today()
+
+    # Get users for the user filter
+    users = UserTable.objects.all()
+    brokers = Broker.objects.all()
+
+    # Default date range is the last 30 days
+    start_date = request.GET.get('start_date', (today - timedelta(days=30)).strftime('%Y-%m-%d'))
+    end_date = request.GET.get('end_date', today.strftime('%Y-%m-%d'))
+
+    # Get selected user
+    user_filter = request.GET.get('user', None)
+    broker_filter = request.GET.get('broker', None)
+    type_filter = request.GET.get('type', None) 
+
+    # Filter Sale objects based on selected user and date range
+    sales_query = Sale.objects.filter(sale_date__range=[start_date, end_date])
+
+    if user_filter:
+        sales_query = sales_query.filter(user__name=user_filter)
+        
+    if broker_filter:
+        sales_query = sales_query.filter(purchase_id__broker__name=broker_filter)
+        
+    if type_filter:  # Apply the new filter for type
+        sales_query = sales_query.filter(purchase_id__type=type_filter)
+
+        
+    # Annotate with derived values
+    sales_query = sales_query.annotate(
+        purchase_rate=F('purchase_id__purchase_rate'),
+        broker=F('purchase_id__broker'),
+        gf_amount=ExpressionWrapper(
+            F('gf_rate') * F('qty'),
+            output_field=DecimalField(max_digits=12, decimal_places=2)
+        )
+    )
+        
+    # Tax rates for Speculation, Long, and Short
+    tax_rates = {tax_rate.profit: tax_rate.percent for tax_rate in TaxRate.objects.all()}
+    # Short Term Profit/Loss
+    #short_term_sales = sales_query.filter(sale_date__lt=F('purchase_id__purchase_date') + timedelta(days=365))
+    short_term_sales = sales_query.filter(
+    sale_date__gte=F('purchase_id__purchase_date') + timedelta(days=1),
+    sale_date__lt=F('purchase_id__purchase_date') + timedelta(days=365)
+)
+
+    # Calculate totals using the calculate_purchase_total method
+    total_purchase_amount = sum(sale.calculate_purchase_total() or 0 for sale in short_term_sales)
+
+    
+    short_term_summary = short_term_sales.aggregate(
+        total_sale_amount=Sum('sale_amount'),
+        total_short_profit=Sum('short_profit'),
+        total_short_loss=Sum('short_loss'),
+        total_short_net=Sum(F('short_profit') - F('short_loss')- F('tax')),
+    )
+    # Include the manually calculated purchase total
+    short_term_summary['total_purchase_amount'] = total_purchase_amount
+    short_term_profit = short_term_summary['total_short_profit'] or 0
+    short_term_loss = short_term_summary['total_short_loss'] or 0
+    short_term_tax = max(0,(short_term_profit - short_term_loss) * (Decimal(tax_rates.get('Short', 0)) / Decimal(100)))
+    # Calculate total short-term net profit
+    total_short_net = short_term_profit - short_term_loss - short_term_tax
+
+    # Update the short-term summary
+    short_term_summary['total_short_net'] = total_short_net
+
+    # Long Term Profit/Loss
+    long_term_sales = sales_query.filter(sale_date__gte=F('purchase_id__purchase_date') + timedelta(days=365))
+    total_purchase_amount = sum(sale.calculate_purchase_total() or 0 for sale in long_term_sales)
+    long_term_summary = long_term_sales.aggregate(
+        
+        total_sale_amount=Sum('sale_amount'),
+        total_long_profit=Sum('long_profit'),
+        total_long_loss=Sum('long_loss'),
+    )
+    long_term_summary['total_purchase_amount'] = total_purchase_amount
+    long_term_profit = long_term_summary['total_long_profit'] or 0
+    long_term_loss = long_term_summary['total_long_loss'] or 0
+    # Fetch the exemption amount from the Exemption table
+    try:
+        exemption = Exemption.objects.get(long='longTerm') 
+        exemption_amount = Decimal(exemption.deduct)
+    except Exemption.DoesNotExist:
+        exemption_amount = Decimal(0)  # Default to 0 if no exemption record is found
+
+    # Update the long-term tax calculation logic
+    taxable_long_term_profit = max(Decimal(0), long_term_profit - long_term_loss - exemption_amount)
+    long_term_tax = max(0,taxable_long_term_profit * (Decimal(tax_rates.get('Long', 0)) / Decimal(100)))
+    # Calculate total long-term net profit
+    total_long_net = long_term_profit - long_term_loss - long_term_tax
+
+# Update long-term summary
+    long_term_summary['total_long_net'] = total_long_net
+    #long_term_tax = (long_term_profit - long_term_loss) * (Decimal(tax_rates.get('Long', 0)) / Decimal(100))
+    
+
+   # Speculation Profit/Loss (non-null and greater than 0 in spec_profit or spec_loss)
+    speculation_sales = sales_query.filter(
+        Q(spec_profit__gt=0) | Q(spec_loss__gt=0)  # Either spec_profit or spec_loss greater than 0
+    )
+    total_purchase_amount = sum(sale.calculate_purchase_total() or 0 for sale in speculation_sales)
+    speculation_summary = speculation_sales.aggregate(
+        
+        total_sale_amount=Sum('sale_amount'),
+        total_spec_profit=Sum('spec_profit'),
+        total_spec_loss=Sum('spec_loss'),
+    )
+    speculation_summary['total_purchase_amount'] = total_purchase_amount
+    speculation_profit = speculation_summary['total_spec_profit'] or 0
+    speculation_loss = speculation_summary['total_spec_loss'] or 0
+    speculation_tax = max(0,(speculation_profit - speculation_loss) * (Decimal(tax_rates.get('Speculation', 0)) / Decimal(100)))
+    # Calculate total speculation net profit
+    total_spec_net = speculation_profit - speculation_loss - speculation_tax
+    speculation_summary['total_spec_net'] = total_spec_net
+
+    context = {
+        'users': users,
+        'start_date': start_date,
+        'end_date': end_date,
+        'brokers': brokers,
+        'short_term_sales': short_term_sales,
+        'long_term_sales': long_term_sales,
+        'speculation_sales': speculation_sales,
+        'short_term_summary': short_term_summary,
+        'long_term_summary': long_term_summary,
+        'speculation_summary': speculation_summary,
+        'short_term_tax': short_term_tax,
+        'long_term_tax': long_term_tax,
+        'speculation_tax': speculation_tax,
+        'type_filter': type_filter,
+    }
+
+    return render(request, 'print_statement.html', context)
+
+def split_view(request,script):
+    context = {'script': script}
+    return render(request, 'split_form.html', context)
+
+@transaction.atomic
+def stock_split_view(request,script):
+    if request.method == 'POST':
+        print("Form submission detected")  # Debugging
+        print("POST data received:", request.POST)
+        form = StockSplitForm(request.POST)
+        if form.is_valid():
+            print("Form is valid")
+            script = form.cleaned_data['script']
+            split_date = form.cleaned_data['split_date']
+            ratio = form.cleaned_data['ratio']
+
+            print(f"Script: {script}, Split Date: {split_date}, Ratio: {ratio}")
+            # Create StockSplit entry
+            split = StockSplit.objects.create(script=script, split_date=split_date, ratio=ratio)
+
+            # Handle the Purchase Table Update
+            try:
+                with transaction.atomic():
+                    purchases = Purchase.objects.filter(script=script)
+                    for purchase in purchases:
+                        # Calculate sold quantity
+                        sold_qty = Sale.objects.filter(purchase_id=purchase).aggregate(
+                            total_sold=models.Sum('qty')
+                        )['total_sold'] or 0
+                        print(f"Sold quantity for purchase {purchase.purchase_id}: {sold_qty}")  # Debugging
+
+                        remaining_qty = purchase.qty - sold_qty
+                        print(f"Remaining quantity: {remaining_qty}")  # Debugging
+                        if remaining_qty > 0:
+                            # Update current record for sold quantity
+                            purchase.qty = sold_qty
+                            purchase.save()
+
+                            # Create a new record for split quantity
+                            Purchase.objects.create(
+                                purchase_date=purchase.purchase_date,
+                                script=purchase.script,
+                                type=purchase.type,
+                                mode=purchase.mode,
+                                user=purchase.user,
+                                qty=int(remaining_qty * ratio),
+                                
+                                purchase_rate=purchase.purchase_rate / Decimal(ratio),
+                                purchase_amount=Decimal(remaining_qty) * Decimal(ratio) * (purchase.purchase_rate / Decimal(ratio)),
+
+                                broker=purchase.broker,
+                                mehul=purchase.mehul,
+                                entry=purchase.entry,
+                                referenced_by=purchase.referenced_by,
+                            )
+                        else:
+                            print(f"Deleting purchase entry {purchase.purchase_id} as quantity is 0")
+                            purchase.delete()
+                    balances = Balance.objects.filter(script=script)
+                    for balance in balances:
+                        purchase_id = balance.purchase_id_id
+                        purchase_qty = Purchase.objects.get(purchase_id=purchase_id).qty
+                        sold_qty = Sale.objects.filter(purchase_id=purchase_id).aggregate(
+                            total_sold=models.Sum('qty')
+                        )['total_sold'] or 0
+                        updated_qty = purchase_qty - sold_qty
+                        print(f"Updating balance for {balance.script}, Purchase ID {purchase_id}: Qty = {updated_qty}")
+                        balance.qty = updated_qty
+                        balance.save()
+            except Exception as e:
+                traceback.print_exc()
+                # Add error handling, e.g., returning a message to the user
+                return render(request, 'error_page.html', {'error': str(e)})
+            return redirect('current_stock')  # Redirect to a success page
+        else:
+            print("Form is invalid:", form.errors)
+    else:
+        print("Rendering GET request for form")
+        form = StockSplitForm()
+    return render(request, 'split_form.html', {'form': form,'script': script})

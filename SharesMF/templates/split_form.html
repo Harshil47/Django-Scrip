@@ -1,0 +1,17 @@
+<h1>Stock Split Form</h1>
+
+<p>Company Name: <strong>{{ script }}</strong></p>
+
+<form method="post" action="{% url 'split_submit' script=script %}">
+    {% csrf_token %}
+    <label for="script">Script:</label>
+    <input type="hidden" name="script" value="{{ script }}">
+    
+    <label for="split_date">Date:</label>
+    <input type="date" name="split_date" required>
+    
+    <label for="ratio">Split Ratio:</label>
+    <input type="number"  name="ratio" required>
+    
+    <button type="submit">Submit</button>
+</form>

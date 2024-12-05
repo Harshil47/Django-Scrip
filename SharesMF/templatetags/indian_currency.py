@@ -8,31 +8,36 @@ def indian_currency(value):
         # Convert to string to preserve full numeric value
         num_str = str(value)
 
-        # Remove any existing commas
-        num_str = num_str.replace(',', '')
+        # Split the number into whole and decimal parts
+        if '.' in num_str:
+            whole, decimal = num_str.split('.')
+        else:
+            whole, decimal = num_str, None
 
-        # If number is less than or equal to 3 digits, return as is
-        if len(num_str) <= 3:
-            return num_str
+        # Remove any existing commas from the whole part
+        whole = whole.replace(',', '')
 
-        # Start from the right side
-        # First, separate the last 3 digits
-        last_three = num_str[-3:]
-        
-        # Get the remaining digits
-        remaining = num_str[:-3]
-        
-        # Group the remaining digits in twos from right to left
-        groups = []
-        while remaining:
-            # Take last two digits (or whatever is left)
-            group = remaining[-2:] if len(remaining) >= 2 else remaining
-            groups.insert(0, group)
-            remaining = remaining[:-2]
-        
-        # Combine the groups
-        result = ','.join(groups) + ',' + last_three
+        # If number is less than or equal to 3 digits, no formatting needed
+        if len(whole) <= 3:
+            formatted = whole
+        else:
+            # Separate the last 3 digits
+            last_three = whole[-3:]
+            # Group the remaining digits in twos from right to left
+            remaining = whole[:-3]
+            groups = []
+            while remaining:
+                group = remaining[-2:] if len(remaining) >= 2 else remaining
+                groups.insert(0, group)
+                remaining = remaining[:-2]
+            
+            # Combine groups and last three digits
+            formatted = ','.join(groups) + ',' + last_three
 
-        return result
+        # Add the decimal part back, if it exists
+        if decimal:
+            formatted = f"{formatted}.{decimal}"
+
+        return formatted
     except (ValueError, TypeError):
         return value

@@ -15,14 +15,16 @@
                     <th>Purchase ID</th>
                     <th>Purchase Date</th>
                     <th>Broker</th>
+                    <th>Data Entry</th>
                     <th>Type</th>
                     <th>Mode</th>
-                    <th>User</th>
+                    <th>Holder</th>
                     <th>Scrip</th>
                     <th>Quantity</th>
                     <th>Purchase Rate</th>
                     <th>Purchase Amount</th>
-                    <th>Actions</th>
+                    <th>Delete</th>
+                    <th>Duplicate</th>
                 </tr>
             </thead>
             <tbody>
@@ -31,6 +33,7 @@
                     <td>{{ purchase.purchase_id }}</td>
                     <td>{{ purchase.purchase_date }}</td>
                     <td>{{ purchase.broker }}</td>
+                    <td>{{ purchase.entry }}</td>
                     <td>{{ purchase.type }}</td>
                     <td>{{ purchase.mode }}</td>
                     <td>{{ purchase.user }}</td>
@@ -48,6 +51,9 @@
                                 onclick="return confirmDelete();">Delete
                             </button>
                         </form>
+                    </td>
+                    <td>
+                        <a href="{% url 'purchase_entry_with_id' purchase.purchase_id %}" class="btn btn-sm btn-secondary">Duplicate</a>
                     </td>
                 </tr>
                 {% endfor %}
