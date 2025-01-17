@@ -28,6 +28,13 @@
       <option value="MF" {% if type_filter == 'MF' %}selected{% endif %}>Mutual Fund</option>
     </select>
 
+    <label for="mode">Mode:</label>
+    <select id="mode" name="mode" class="form-control">
+      <option value="">--All Modes--</option>
+      <option value="secondary-market" {% if mode_filter == 'secondary-market' %}selected{% endif %}>Secondary Market</option>
+      <option value="new-issue" {% if mode_filter == 'new-issue' %}selected{% endif %}>Primary Market</option>
+    </select>
+
 
     <label for="start_date">Start Date:</label>
     <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}">

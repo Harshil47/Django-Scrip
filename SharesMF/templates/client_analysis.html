@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Specific Analysis - {{ client.clientName }}</title>
+    <style>
+        .chart-container {
+            width: 100%;
+            text-align: center;
+        }
+        .chart-container img {
+            width: 80%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Client Specific Analysis for {{ client.clientName }}</h1>
+    
+    <h2>Loan Participation Overview</h2>
+    <div class="chart-container">
+        <h3>Total Loans</h3>
+        <p>Lender Loans: {{ total_lender_loans }}</p>
+        <p>Borrower Loans: {{ total_borrower_loans }}</p>
+        <img src="data:image/png;base64,{{ chart_data }}" alt="Loan Participation Overview Chart">
+    </div>
+
+    <h2>Payment Flow</h2>
+    <p>Total Payments Sent: {{ total_sent }}</p>
+    <p>Total Payments Received: {{ total_received }}</p>
+
+    <h2>Total Outstanding Loans</h2>
+    <p>Total Outstanding Balance: {{ total_outstanding_balance }}</p>
+
+    <h2>Revenue (Interest Earned)</h2>
+    <p>Total Interest Earned: {{ interest_earned }}</p>
+
+    <h2>Top Borrowers and Lenders</h2>
+    <h3>Top Borrowers:</h3>
+    <ul>
+        {% for borrower in top_borrowers %}
+            <li>Borrower ID: {{ borrower.borrower }} - Total Principal: {{ borrower.total_principal }}</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Top Lenders:</h3>
+    <ul>
+        {% for lender in top_lenders %}
+            <li>Lender ID: {{ lender.lender }} - Total Principal: {{ lender.total_principal }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Net Profit (Revenue vs Payments)</h2>
+    <p>Net Profit: {{ net_profit }}</p>
+
+    <h2>Average Loan Size</h2>
+    <p>Average Loan Size: {{ average_loan_size }}</p>
+
+    <h2>Risk Exposure (for Lenders)</h2>
+    <p>Total Risk Exposure: {{ risk_exposure }}</p>
+</body>
+</html>

@@ -15,6 +15,17 @@
             {% endfor %}
         </select>
 
+        <label for="purchase_mode" class="ml-2">Purchase Mode:</label>
+        <select id="purchase_mode" name="purchase_mode" class="form-control ml-2">
+        <option value="">--All Modes--</option>
+        <option value="secondary-market" {% if purchase_mode_filter == 'secondary-market' %}selected{% endif %}>
+            Secondary Market
+        </option>
+        <option value="new-issue" {% if purchase_mode_filter == 'new-issue' %}selected{% endif %}>
+            Primary Market
+        </option>
+    </select>
+
         <label for="family" class="ml-2">Select Family:</label>
         <select id="family" name="family" class="form-control ml-2">
             <option value="">--All Families--</option>
@@ -47,7 +58,8 @@
                 <td>{{ record.total_amount|indian_currency }}</td>
                 <td>{{ record.entry_count }}</td>
                 <td><a href="{% url 'script_info' record.script %}" class="btn btn-info">View</a>
-                    <a href="{% url 'split_submit' record.script %}" class="btn btn-primary">Stock Split</a>
+                    <a href="{% url 'split_submit' record.script %}" class="btn btn-primary">Split</a>
+                    <a href="{% url 'bonus_submit' record.script %}" class="btn btn-primary">Bonus</a>
 
 
             </tr>

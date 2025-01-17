@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}
+<title>Loan and Payment Tracker</title>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Loan and Payment Tracker</h1>
+
+    {% for loan_info in loan_data %}
+        <!-- Loan Table -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <strong>Loan Details</strong>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Loan ID</th>
+                            <th>Lender</th>
+                            <th>Borrower</th>
+                            <th>Principal Amount</th>
+                            <th>ROI</th>
+                            <th>Interest P/M</th>
+                            <th>Loan Date</th>
+                            <th>Remaining Balance</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ loan_info.loan.loanId }}</td>
+                            <td>{{ loan_info.loan.lender.clientName }}</td>
+                            <td>{{ loan_info.loan.borrower.clientName }}</td>
+                            <td>{{ loan_info.loan.principleAmount }}</td>
+                            <td>{{ loan_info.loan.percentMonth }}</td>
+                            <td>{{ loan_info.loan.interestMonth }}</td>
+                            <td>{{ loan_info.loan.loanDate }}</td>
+                            <td>{{ loan_info.remaining_balance }}</td>
+                            <td>{{ loan_info.loan.status|yesno:"Active,Closed" }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <strong>Principal Payments for Loan ID {{ loan_info.loan.loanId }}
+                    (Lender: {{ loan_info.loan.lender }}, Borrower: {{ loan_info.loan.borrower }})
+                </strong>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Payment Date</th>
+                            <th>Given Amount</th>
+                            <th>Remaining Balance</th>
+                            <th>Current Interest/Month</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in loan_info.principal_payments %}
+                        <tr>
+                            <td>{{ payment.paymentDate }}</td>
+                            <td>{{ payment.givenAmount }}</td>
+                            <td>{{ payment.remaining_balance }}</td>
+                            <td>{{ payment.prinInterestMonth }}</td>
+                            
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="text-end mt-2">
+                    <strong>Total Principal Paid: {{ loan_info.total_principal_paid }}</strong>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{% url 'new_principal_payment' loan_info.loan.loanId %}" class="btn btn-primary">Add Principal Payment</a>
+                </div>
+            </div>
+        </div>
+        
+
+<!-- Payment Table -->
+<div class="card mt-3">
+    <div class="card-header">
+        <strong>Payments for Loan ID {{ loan_info.loan.loanId }}
+            (Lender: {{ loan_info.loan.lender }}, Borrower: {{ loan_info.loan.borrower }})
+        </strong>
+    </div>
+    <div class="card-body">
+        <table class="table table-bordered">
+            <thead class="thead-light">
+                <tr>
+                    <th>Financial Year</th>
+                    <th>Payment Date</th>
+                    <th>Amount</th>
+                    <th>Granter</th>
+                    <th>Recipient</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Site</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Display grouped records for previous financial years -->
+                {% for record in loan_info.previous_year_summary %}
+                <tr>
+                    <td>{{ record.financial_year }}</td>
+                    <td colspan="4" class="text-center">Summed Total</td>
+                    <td>{{ record.total_paid }}</td>
+                </tr>
+                {% endfor %}
+
+                <!-- Display individual records for the current financial year -->
+                {% for payment in loan_info.current_year_payments %}
+                <tr>
+                    <td>Current Year</td>
+                    <td>{{ payment.paymentDate }}</td>
+                    <td>{{ payment.amount }}</td>
+                    <td>{{ payment.granter.clientName }}</td>
+                    <td>{{ payment.recipient.clientName }}</td>
+                    <td>{{ payment.startDate }}</td>
+                    <td>{{ payment.endDate}}</td>
+                    <td>{{ payment.site }}</td>
+                </tr>
+                {% endfor %}
+                
+               
+                <tr>
+                    <td colspan="5" class="text-end">
+                        <strong>Total Amount Paid (Current Year): {{ loan_info.total_amount_paid_current_year|floatformat:2 }}</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="5" class="text-end">
+                        <strong>Total Amount Paid (All Years): {{ loan_info.total_amount_paid_all_years|floatformat:2 }}</strong>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="text-center mt-3">
+            <a href="{% url 'new_payment' loan_info.loan.loanId %}" class="btn btn-success">Add Payment</a>
+        </div>
+    </div>
+</div>
+
+    {% endfor %}
+
+    <div class="text-center mt-5">
+        <a href="{% url 'new_loan' %}" class="btn btn-primary">Add New Loan</a>
+    </div>
+</div>
+{% endblock %}

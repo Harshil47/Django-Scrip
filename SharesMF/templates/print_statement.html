@@ -45,6 +45,7 @@
     <thead>
       <tr>
         <th>Scrip</th>
+        <th>INE Number</th>
         <th>Qty</th>
         <th>Purchase Date</th>
         <th>Purchase Rate</th>
@@ -64,6 +65,7 @@
       <tr>
           
           <td>{{ sale.script }}</td>
+          <td>{{ sale.ine }}</td>
           <td>{{ sale.qty }}</td>
           <td>{{ sale.purchase_id.purchase_date }}</td>
           <td>{{ sale.purchase_rate }}</td>
@@ -99,6 +101,7 @@
     <thead>
       <tr>
         <th>Scrip</th>
+        <th>INE Number</th>
         <th>Qty</th>
         <th>Purchase Date</th>
         <th>Purchase Rate</th>
@@ -122,6 +125,7 @@
 
             
             <td>{{ sale.script }}</td>
+            <td>{{ sale.ine }}</td>
             <td>{{ sale.qty }}</td>
             <td>{{ sale.purchase_id.purchase_date }}</td>
             <td>{{ sale.purchase_rate }}</td>
@@ -162,6 +166,7 @@
     <thead>
       <tr>
         <th>Scrip</th>
+        <th>INE Number</th>
         <th>Qty</th>
         <th>Purchase Date</th>
         <th>Purchase Rate</th>
@@ -178,6 +183,7 @@
       {% for sale in speculation_sales %}
         <tr>
           <td>{{ sale.script }}</td>
+          <td>{{ sale.ine }}</td>
           <td>{{ sale.qty }}</td>
           <td>{{ sale.purchase_id.purchase_date }}</td>
           <td>{{ sale.purchase_rate }}</td>

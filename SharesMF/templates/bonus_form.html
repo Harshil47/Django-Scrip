@@ -1,0 +1,17 @@
+<h1>Bonus Form</h1>
+
+<p>Script: <strong>{{ script }}</strong></p>
+
+<form method="post" action="{% url 'bonus_submit' script=script %}">
+    {% csrf_token %}
+    <label for="script">Script:</label>
+    <input type="hidden" name="script" value="{{ script }}">
+
+    <label for="bonus_date">Bonus Date:</label>
+    <input type="date" name="bonus_date" required>
+
+    <label for="ratio">Bonus Ratio:</label>
+    <input type="number" name="ratio" required min="1">
+
+    <button type="submit">Submit</button>
+</form>

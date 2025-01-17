@@ -20,6 +20,14 @@ urlpatterns = [
     path('split/', views.split_view, name='split_view'),
     path('split/<str:script>/', views.split_view, name='split_view'),
     path('split/submit/<str:script>', views.stock_split_view, name='split_submit'),
-
-    
+    path('bonus/', views.bonus_view, name='bonus_view'),
+    path('bonus/<str:script>/', views.bonus_view, name='bonus_view'),
+    path('bonus/submit/<str:script>', views.bonus_submit, name='bonus_submit'),
+    path('add-primary-market-prices/', views.add_primary_market_prices, name='add-primary-market-prices'),
+    path('purchase-summary/', views.purchase_summary, name='purchase_summary'),
+    path('loan', views.loan_list, name='loan_list'),
+    path('new_loan/', views.new_loan, name='new_loan'),
+    path('new_payment/<int:loan_id>/', views.new_payment, name='new_payment'),
+    path('principal_payment/new/<int:loan_id>/', views.new_principal_payment, name='new_principal_payment'),
+    path('client-analysis/', views.client_specific_analysis, name='client_specific_analysis'),
 ]

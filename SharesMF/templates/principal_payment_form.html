@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}
+<title>Add Principal Payment</title>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Add Principal Payment</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Submit</button>
+    </form>
+    <div class="text-center mt-3">
+        <a href="{% url 'loan_list' %}" class="btn btn-primary">Back to Loan List</a>
+    </div>
+</div>
+{% endblock %}
